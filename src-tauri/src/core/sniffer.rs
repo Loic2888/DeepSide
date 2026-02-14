@@ -18,11 +18,37 @@ pub fn run_sniffer(
          println!(" - {} ({:?})", d.name, d.desc);
     }
 
-    // Smart Selection: Find first device with an IP address (heuristic for "active")
-    // PcapDevice::lookup() often fails on Windows to pick the *active* Wi-Fi/Ethernet.
-    let main_device = device_list.into_iter()
-        .find(|d| !d.addresses.is_empty()) 
-        .ok_or("No active network device found (no IP assigned)")?;
+    // Smart Selection: Find the most likely physical network interface
+    let mut main_device = None;
+    
+    // Priority 1: Physical adapters (Wi-Fi, Ethernet, Wireless) with an IP, excluding virtual ones
+    for d in &device_list {
+        let desc = d.desc.clone().unwrap_or_default().to_lowercase();
+        if !d.addresses.is_empty() && 
+           (desc.contains("wi-fi") || desc.contains("ethernet") || desc.contains("wireless") || desc.contains("intel") || desc.contains("realtek")) &&
+           !desc.contains("virtual") && !desc.contains("hyper-v") && !desc.contains("loopback") && !desc.contains("miniport") {
+            main_device = Some(d.clone());
+            break;
+        }
+    }
+
+    // Priority 2: Any device with an IP that isn't virtual/loopback
+    if main_device.is_none() {
+        for d in &device_list {
+            let desc = d.desc.clone().unwrap_or_default().to_lowercase();
+            if !d.addresses.is_empty() && !desc.contains("virtual") && !desc.contains("hyper-v") && !desc.contains("loopback") {
+                main_device = Some(d.clone());
+                break;
+            }
+        }
+    }
+
+    // Priority 3: Fallback to the first one with an IP
+    if main_device.is_none() {
+        main_device = device_list.into_iter().find(|d| !d.addresses.is_empty());
+    }
+
+    let main_device = main_device.ok_or("No active network device found (no IP assigned)")?;
 
     println!("Selected active device: {} ({:?})", main_device.name, main_device.desc);
 
