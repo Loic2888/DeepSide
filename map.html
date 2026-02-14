@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepSide - Network Map</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #050505;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        #graph-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ccff;
+            pointer-events: none;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ccff;
+        }
+
+        .legend {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+    <script type="module" src="/src/map.ts" defer></script>
+</head>
+
+<body>
+    <div class="overlay">
+        <h1>GALACTIC VIEW</h1>
+        <div class="legend" id="status-text">Connecting to Neural Network...</div>
+    </div>
+    <div id="graph-container"></div>
+</body>
+
+</html>

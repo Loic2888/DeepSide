@@ -1,0 +1,43 @@
+# DeepSide Git Ignore
+
+# API Keys and Secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build and Dependencies
+node_modules
+/dist
+/dist-ssr
+/target
+/src-tauri/target
+/src-tauri/gen/schemas
+
+# Local AI Models (Too large for GitHub)
+/src-tauri/resources/*.onnx
+/src-tauri/resources/tokenizer.json
+/src-tauri/onnxruntime.dll
+/src-tauri/onnxruntime.lib
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

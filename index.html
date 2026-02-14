@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeepSide</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="/src/main.ts" defer></script>
+</head>
+
+<body>
+  <div class="app-layout">
+
+    <!-- 1. MAIN VIEW (LEFT) -->
+    <main class="main-view">
+
+      <!-- VIEW: ILLYA HOLOGRAM (DEFAULT) -->
+      <div id="view-illya" class="view-container"
+        style="display: flex; flex-direction:column; align-items:center; justify-content:center; height:100%; position:relative;">
+        <div class="energy-orb-container">
+          <!-- Anneaux orbitaux -->
+          <div class="orbit-ring ring-1"></div>
+          <div class="orbit-ring ring-2"></div>
+          <div class="orbit-ring ring-3"></div>
+
+          <!-- Particules d'énergie qui s'échappent -->
+          <div class="energy-particles">
+            <div class="energy-particle ep1"></div>
+            <div class="energy-particle ep2"></div>
+            <div class="energy-particle ep3"></div>
+            <div class="energy-particle ep4"></div>
+            <div class="energy-particle ep5"></div>
+            <div class="energy-particle ep6"></div>
+            <div class="energy-particle ep7"></div>
+            <div class="energy-particle ep8"></div>
+            <div class="energy-particle ep9"></div>
+            <div class="energy-particle ep10"></div>
+            <div class="energy-particle ep11"></div>
+            <div class="energy-particle ep12"></div>
+          </div>
+
+          <!-- Aura externe pulsante -->
+          <div class="orb-aura aura-outer"></div>
+          <div class="orb-aura aura-mid"></div>
+          <div class="orb-aura aura-inner"></div>
+
+          <!-- Noyau de la boule d'énergie -->
+          <div class="energy-core">
+            <div class="core-layer layer-1"></div>
+            <div class="core-layer layer-2"></div>
+            <div class="core-layer layer-3"></div>
+            <div class="core-center"></div>
+          </div>
+
+          <!-- Éclairs d'énergie -->
+          <div class="energy-bolts">
+            <div class="bolt b1"></div>
+            <div class="bolt b2"></div>
+            <div class="bolt b3"></div>
+            <div class="bolt b4"></div>
+            <div class="bolt b5"></div>
+            <div class="bolt b6"></div>
+          </div>
+
+          <!-- Vagues d'énergie -->
+          <div class="energy-waves">
+            <div class="wave w1"></div>
+            <div class="wave w2"></div>
+            <div class="wave w3"></div>
+          </div>
+
+          <div class="hologram-status">ENERGY CORE ACTIVE</div>
+        </div>
+        <!-- LIVE ACTIVITY LOG PANEL -->
+        <div class="activity-log-container">
+          <div class="activity-log-header">
+            <span class="activity-log-icon">📡</span>
+            <span>NETWORK ACTIVITY LOG</span>
+            <span class="activity-log-live">● LIVE</span>
+          </div>
+          <div id="activity-log" class="activity-log-content">
+            <div class="activity-entry">Monitoring network traffic...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: NETWORK MAP (Interactive Topology) -->
+      <div id="view-map" class="view-container"
+        style="display: none; height:100%; position:relative; background: #050a15;">
+        <!-- Map Header -->
+        <div class="network-map-header">
+          <span class="map-icon">🗺️</span>
+          <span>NETWORK TOPOLOGY</span>
+          <span class="map-live">● LIVE</span>
+          <button id="btn-refresh-map" class="map-btn" title="Refresh">🔄</button>
+          <button id="btn-center-map" class="map-btn" title="Center View">⊙</button>
+        </div>
+
+        <!-- Canvas for network visualization -->
+        <canvas id="network-map-canvas" style="width:100%; height: calc(100% - 40px);"></canvas>
+
+        <!-- Legend -->
+        <div class="map-legend">
+          <div class="legend-item"><span class="legend-dot gateway"></span> Gateway</div>
+          <div class="legend-item"><span class="legend-dot device"></span> Device</div>
+          <div class="legend-item"><span class="legend-dot threat"></span> Threat</div>
+          <div class="legend-item"><span class="legend-dot local"></span> This PC</div>
+        </div>
+
+        <!-- Node Info Popup -->
+        <div id="node-info-popup" class="node-popup" style="display:none;">
+          <div class="popup-header">Device Info</div>
+          <div id="popup-content"></div>
+        </div>
+      </div>
+
+      <!-- VIEW: NETWORK (Merged Dashboard + Evidence) -->
+      <div id="view-network" class="view-container" style="display: none;">
+
+        <!-- ROW 1: CRITICAL STATS -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div><span class="stat-label">Active Targets</span><br>
+              <div id="val-targets" class="stat-num">0</div>
+            </div>
+            <span style="font-size:30px; opacity:0.2">🎯</span>
+          </div>
+          <div class="stat-box alert" style="cursor:pointer;" onclick="window.showThreatLog()"
+            title="Voir l'historique des menaces">
+            <div><span class="stat-label">Threat Level</span><br>
+              <div id="val-threats" class="stat-num">0</div>
+            </div>
+            <span style="font-size:30px; opacity:0.2">⚠️</span>
+          </div>
+          <div class="stat-box">
+            <div><span class="stat-label">Credentials</span><br>
+              <div id="val-creds" class="stat-num">0</div>
+            </div>
+            <span style="font-size:30px; opacity:0.2">🔑</span>
+          </div>
+        </div>
+
+        <!-- ROW 2: TOP ACTIVE TARGETS -->
+        <div class="list-wrapper" style="flex: 1;">
+          <div class="section-header">
+            <span>🏆 TOP ACTIVE TARGETS (High Traffic)</span>
+            <span style="font-size:10px; opacity:0.7">LIVE RANKING</span>
+          </div>
+          <div id="device-list" class="simple-list">
+            <!-- Injected rows: Rank | IP | Mac | OS | Activities -->
+          </div>
+        </div>
+
+        <!-- ROW 3: INTELLIGENCE LOGS (Evidence) -->
+        <div class="list-wrapper" style="flex: 1;">
+          <div class="section-header">INTELLIGENCE & FORENSICS LOGS</div>
+          <div id="evidence-list" class="simple-list" style="font-size:11px;">
+            <div style="padding: 10px; text-align: center; color: #666;">Waiting for events...</div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- 2. CONTROL PANEL (RIGHT) -->
+    <aside class="control-panel">
+      <!-- HEADER -->
+      <div class="cp-header">
+        <div class="logo-small">DEEPSIDE</div>
+        <div style="font-size:10px; color:var(--text-dim); margin-top:4px;" id="local-ip-display">Local IP: ...</div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="chat-section">
+        <div class="panel-header" style="justify-content: space-between;">
+          <span
+            style="color:#00ccff; font-size:11px; font-weight:bold; text-shadow: 0 0 10px rgba(0,204,255,0.5); letter-spacing: 1px;">ILLYA
+            AI SYSTEM</span>
+          <div id="status-ai" class="status-dot" title="AI Status: Checking..."></div>
+        </div>
+        <div id="chat-output" class="chat-console" style="user-select: text;">
+          <div class="line system">Initializing TSCR Protocol...</div>
+          <div class="line system">Illya Online.</div>
+        </div>
+        <div class="input-area">
+          <input type="text" id="ai-input" placeholder="Orders?" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- BOTTOM: TOOLS SECTION -->
+      <div class="tools-section">
+
+        <!-- NAV ROW -->
+        <div class="nav-grid">
+          <div class="nav-btn active" id="nav-illya" onclick="window.switchTab('illya')">ILLYA</div>
+          <div class="nav-btn" id="nav-map" onclick="window.switchTab('map')">MAP</div>
+          <div class="nav-btn" id="nav-network" onclick="window.switchTab('network')">NETWORK</div>
+        </div>
+
+        <div style="height:10px;"></div>
+
+        <!-- TOOLS GRID -->
+        <div class="tools-grid">
+          <button class="tool-btn" id="btn-scan-net">
+            <span class="icon">📡</span>
+            SCAN
+          </button>
+          <button class="tool-btn" id="btn-sentinel">
+            <span class="icon">🛡️</span>
+            SENTINEL
+          </button>
+          <!-- Proxy remains, Pop-out moved to Map -->
+          <button class="tool-btn" id="btn-proxy-ui">
+            <span class="icon">🕵️</span>
+            PROXY
+          </button>
+          <button class="tool-btn" id="btn-help" onclick="window.showHelp()">
+            <span class="icon">❓</span>
+            HELP
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+  <div id="toast-container"></div>
+
+  <!-- HELP MODAL -->
+  <div id="help-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📖 Commandes Disponibles</h2>
+        <button class="modal-close" onclick="window.closeModal('help-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section">
+          <h3>🔍 Analyse & Surveillance</h3>
+          <div class="help-cmd">
+            <code>Statistiques réseau</code>
+            <span>Affiche un résumé des paquets, IPs et connexions.</span>
+          </div>
+          <div class="help-cmd">
+            <code>Y a-t-il des menaces ?</code>
+            <span>Analyse les alertes actives et leur gravité.</span>
+          </div>
+          <div class="help-cmd">
+            <code>Identifie [IP]</code>
+            <span>Lance un scan de ports et identifie l'appareil.</span>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>⚔️ Actions & Protection</h3>
+          <div class="help-cmd">
+            <code>Scanne [IP]</code>
+            <span>Scan de ports Nmap sur une IP cible.</span>
+          </div>
+          <div class="help-cmd">
+            <code>Bloque [IP]</code>
+            <span>Coupe l'accès internet de l'IP via ARP poisoning.</span>
+          </div>
+          <div class="help-cmd">
+            <code>Analyse [URL]</code>
+            <span>Vérifie si une URL est suspecte/phishing.</span>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>🛡️ Outils Rapides</h3>
+          <div class="help-cmd">
+            <code>SCAN</code>
+            <span>Lance un ping sweep du réseau local.</span>
+          </div>
+          <div class="help-cmd">
+            <code>SENTINEL</code>
+            <span>Active le mode défense automatique.</span>
+          </div>
+          <div class="help-cmd">
+            <code>PROXY</code>
+            <span>
+              Démarre le serveur proxy sur le port 8080. <br>
+              <b>Windows:</b> Configurer Proxy sur <code>127.0.0.1:8080</code>.<br>
+              <b>Mobile:</b> Configurer WiFi sur <code>IP_DU_PC:8080</code>.
+            </span>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>🌐 Analyse Réseau</h3>
+          <div class="help-cmd">
+            <code>CMD:DNS [domaine]</code>
+            <span>Lookup DNS - résout un nom de domaine en IP.</span>
+          </div>
+          <div class="help-cmd">
+            <code>CMD:TRACEROUTE [ip]</code>
+            <span>Trace le chemin réseau vers une cible.</span>
+          </div>
+          <div class="help-cmd">
+            <code>CMD:BANNER [ip] [port]</code>
+            <span>Récupère la bannière d'un service (SSH, HTTP, FTP...).</span>
+          </div>
+          <div class="help-cmd">
+            <code>CMD:SSL [host]</code>
+            <span>Analyse le certificat SSL/TLS (expiration, protocole, cipher).</span>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>🔒 Sécurité & Vulnérabilités</h3>
+          <div class="help-cmd">
+            <code>CMD:VULNSCAN [ip]</code>
+            <span>Scan les vulnérabilités CVE connues (SSH, Apache, MySQL...).</span>
+          </div>
+          <div class="help-cmd">
+            <code>CMD:VIRUSTOTAL [ip/domain/hash]</code>
+            <span>Vérifie sur VirusTotal (nécessite clé API).</span>
+          </div>
+          <div class="help-cmd">
+            <code>CMD:THREATINTEL [ip]</code>
+            <span>Consulte Feodo Tracker, URLhaus, Tor exit nodes.</span>
+          </div>
+          <div class="help-cmd">
+            <code>CMD:SHODAN [ip]</code>
+            <span>Recherche sur Shodan (nécessite clé API).</span>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>🔬 Forensics & Données</h3>
+          <div class="help-cmd">
+            <code>CMD:DISCONNECT [ip]</code>
+            <span>Déconnecte un appareil du WiFi (ARP burst 5s).</span>
+          </div>
+          <div class="help-cmd">
+            <code>CREDENTIALS</code>
+            <span>Affiche les identifiants capturés (HTTP basique).</span>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>📊 Export & Automatisation</h3>
+          <div class="help-cmd">
+            <code>WATCH MODE</code>
+            <span>Surveillance automatique 24/7 avec alertes temps réel.</span>
+          </div>
+          <div class="help-cmd">
+            <code>EXPORT PDF</code>
+            <span>Génère un rapport PDF (menaces, appareils, analyse IA).</span>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>🤖 IA Locale (ILLYA)</h3>
+          <div class="help-cmd">
+            <code>Questions en langage naturel</code>
+            <span>L'IA analyse votre réseau localement (ONNX).</span>
+          </div>
+          <div class="help-cmd">
+            <code>Voyant vert</code>
+            <span>IA prête. Voyant rouge = modèle non chargé.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL (API Keys) -->
+  <div id="settings-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚙️ Configuration API</h2>
+        <button class="modal-close" onclick="window.closeModal('settings-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <h3>🦠 VirusTotal</h3>
+          <p style="color:#888; font-size:11px; margin-bottom:8px;">Gratuit sur virustotal.com → API Key</p>
+          <input type="password" id="api-virustotal" class="settings-input"
+            placeholder="Entrer la clé API VirusTotal...">
+        </div>
+        <div class="settings-section">
+          <h3>🔍 Shodan</h3>
+          <p style="color:#888; font-size:11px; margin-bottom:8px;">Gratuit sur shodan.io → Account</p>
+          <input type="password" id="api-shodan" class="settings-input" placeholder="Entrer la clé API Shodan...">
+        </div>
+        <div class="settings-section">
+          <h3>🚨 AbuseIPDB (optionnel)</h3>
+          <p style="color:#888; font-size:11px; margin-bottom:8px;">Gratuit sur abuseipdb.com</p>
+          <input type="password" id="api-abuseipdb" class="settings-input" placeholder="Entrer la clé API AbuseIPDB...">
+        </div>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+          <button class="btn-save-settings" onclick="window.saveApiKeys()">💾 Sauvegarder</button>
+          <button class="btn-test-api" onclick="window.testApiKeys()">🧪 Tester</button>
+        </div>
+        <div id="api-status" style="margin-top:10px; font-size:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THREAT DETAILS MODAL -->
+  <div id="threat-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content modal-threat">
+      <div class="modal-header threat-header">
+        <span id="threat-level-badge" class="threat-level">HIGH</span>
+        <h2 id="threat-title">Titre de la menace</h2>
+        <button class="modal-close" onclick="window.closeModal('threat-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="threat-details-grid">
+          <div class="threat-row">
+            <span class="threat-label">Source IP:</span>
+            <span id="threat-source" class="threat-value">N/A</span>
+          </div>
+          <div class="threat-row">
+            <span class="threat-label">Target IP:</span>
+            <span id="threat-target" class="threat-value">N/A</span>
+          </div>
+          <div class="threat-row">
+            <span class="threat-label">MITRE ATT&CK:</span>
+            <span id="threat-mitre" class="threat-value">N/A</span>
+          </div>
+          <div class="threat-row">
+            <span class="threat-label">Timestamp:</span>
+            <span id="threat-time" class="threat-value">N/A</span>
+          </div>
+        </div>
+
+        <div class="threat-section">
+          <h4>Description:</h4>
+          <div id="threat-description" class="threat-box">Chargement...</div>
+        </div>
+
+        <div class="threat-section">
+          <h4 style="color: #7ee787;">Recommandation:</h4>
+          <div id="threat-recommendation" class="threat-box green">Aucune action spécifique.</div>
+        </div>
+
+        <div class="threat-section ai-section" style="display:none;" id="ai-analysis-section">
+          <h4 style="color: #a371f7;">🤖 Analyse IA:</h4>
+          <div id="threat-ai-result" class="threat-box purple">En cours d'analyse...</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-action btn-ai" id="btn-analyze-threat" onclick="window.analyzeThreatWithAI()">
+          <span>🤖</span> Analyse IA
+        </button>
+        <button class="btn-action" style="background: #238636; border-color: #238636; color: white;"
+          onclick="window.markFalsePositive()">
+          <span>✅</span> Faux Positif
+        </button>
+        <button class="btn-action btn-danger" id="btn-block-threat" onclick="window.blockThreatSource()">
+          <span>🚫</span> Bloquer IP
+        </button>
+        <button class="btn-action" onclick="window.closeModal('threat-modal')">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THREAT LOG MODAL -->
+  <div id="threat-log-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content modal-threat-log">
+      <div class="modal-header">
+        <h2>📋 Threat Log - Aujourd'hui</h2>
+        <button class="modal-close" onclick="window.closeModal('threat-log-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="threat-log-list" class="threat-log-list">
+          <div class="threat-log-empty">Aucune menace enregistrée</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-action" onclick="window.clearThreatLog()">🗑️ Vider le log</button>
+        <button class="btn-action" onclick="window.closeModal('threat-log-modal')">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION URGENTE POPUP -->
+  <div id="action-popup" class="modal-overlay action-popup-overlay" style="display:none;">
+    <div class="modal-content action-popup-content">
+      <div class="action-popup-header">
+        <span class="action-popup-icon">🚨</span>
+        <h2>Action Requise</h2>
+      </div>
+
+      <div class="action-popup-body">
+        <div class="action-popup-threat">
+          <div class="action-popup-label">Menace détectée:</div>
+          <div id="action-threat-title" class="action-popup-value">Port Scan massif</div>
+        </div>
+
+        <div class="action-popup-threat">
+          <div class="action-popup-label">Source:</div>
+          <div id="action-threat-ip" class="action-popup-value ip">192.168.1.50</div>
+        </div>
+
+        <div class="action-popup-threat">
+          <div class="action-popup-label">MITRE ATT&CK:</div>
+          <div id="action-threat-mitre" class="action-popup-value mitre">T1046</div>
+        </div>
+
+        <div class="action-popup-ai">
+          <div class="action-popup-ai-header">🤖 Analyse Illya:</div>
+          <div id="action-ai-analysis" class="action-popup-ai-text">
+            Chargement de l'analyse...
+          </div>
+        </div>
+
+        <div class="action-popup-solution">
+          <div class="action-popup-solution-header">💡 Solution recommandée:</div>
+          <div id="action-solution-text" class="action-popup-solution-text">
+            Bloquer l'adresse IP source
+          </div>
+        </div>
+      </div>
+
+      <div class="action-popup-buttons">
+        <button id="action-popup-apply" class="action-popup-btn primary" onclick="window.applyRecommendedAction()">
+          🛡️ Appliquer la solution
+        </button>
+        <button class="action-popup-btn secondary" onclick="window.ignoreAction()">
+          Ignorer
+        </button>
+        <button class="action-popup-btn tertiary" onclick="window.closeModal('action-popup')">
+          Voir plus de détails
+        </button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
