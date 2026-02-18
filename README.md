@@ -99,7 +99,16 @@ Install Node dependencies:
 npm install
 ```
 
-### 3. Run the Sentinel
+### 3. AI Model Setup (Optional)
+To enable the local AI features (Illya), you need to manually download the ONNX model and tokenizer.
+1. Download a compatible ONNX model (e.g., Llama-3-8B-Instruct-ONNX).
+2. Place the `.onnx` file and `tokenizer.json` in:
+   `src-tauri/resources/lib/`
+3. Rename the model file to `model.onnx`.
+
+*Note: The application runs fully without the model, but AI commands will be disabled.*
+
+### 4. Run the Sentinel
 Start in development mode:
 ```bash
 npm run tauri dev
